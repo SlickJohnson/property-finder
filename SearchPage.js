@@ -10,8 +10,47 @@ import {
   Image,
 } from 'react-native';
 
+function urlForQueryAndPage(key, value, pageNumber) {
+  const data = {
+    country: 'uk',
+    pretty: '1',
+    encoding: 'json',
+    listing_type: 'buy',
+    action: 'search_listings',
+    page: pageNumber,
+  };
+  data[key] = value;
+
+  const querystring = Object.keys(data).map(key => key + '=' + encodeURIComponent(data[key])).join('&');
+
+  return 'https://api.nestoria.co.uk/api?' + querystring;
+}
+
 export default class SearchPage extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      searchString: 'london',
+      isLoading: false,
+    };
+  }
+
+  onSearchTextChanged = (event) => {
+    this.setState({searchString: event.nativeEvent.text});
+  };
+
+  executeQuery = (query) => {
+    this.setState({isLoading: true});
+  };
+
+  onSearchPressed = () => {
+    const query = urlForQueryAndPage('place_name', this.state.searchString, 1);
+    this.executeQuery(query);
+  };
+
   render() {
+    const spinner = this.state.isLoading ? <ActivityIndicator size='large'/> : null;
+    
     return (
       <View style={styles.container}>
         <Text style={styles.description}>
@@ -23,15 +62,18 @@ export default class SearchPage extends Component {
         <View style={styles.flowRight}>
           <TextInput
             style={styles.searchInput}
-            placeHolder="Search via name or postcode"
+            value={this.state.searchString}
+            onChange={this.onSearchTextChanged}
+            placeholder="Search via name or postcode"
           />
-          <Button 
-            onPress={() => {}}
+          <Button
+            onPress={this.onSearchPressed}
             color="#48BBEC"
             title="Go"
           />
         </View>
         <Image source={require('./Resources/house.png')} style={styles.image}/>
+        {spinner}
       </View>
     );
   }
